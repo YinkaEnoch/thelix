@@ -1,5 +1,9 @@
 export const getUserData = () => {
-  return JSON.parse(sessionStorage.getItem("APP_USER_DATA") ?? "");
+  const userData = sessionStorage.getItem("APP_USER_DATA");
+
+  if (!userData) return null;
+
+  return JSON.parse(userData);
 };
 
 export const saveUserData = (userData: Record<string, any>) => {

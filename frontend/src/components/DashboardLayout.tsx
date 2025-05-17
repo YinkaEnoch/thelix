@@ -1,6 +1,6 @@
-import { Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState, type PropsWithChildren } from "react";
-import { clearAccessToken, getAccessToken } from "../utils/token.util";
+import { useLocation, useNavigate } from "@tanstack/react-router";
+import { useState, type PropsWithChildren } from "react";
+import { clearAccessToken } from "../utils/token.util";
 import { getUserData } from "../utils/userData.util";
 
 type Props = PropsWithChildren & {
@@ -9,20 +9,14 @@ type Props = PropsWithChildren & {
 
 export const DashboardLayout = (props: Props) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [openDrawer, setOpenDrawer] = useState(false);
   const userData = getUserData();
 
-  useEffect(() => {
-    const accessToken = getAccessToken();
-
-    if (!accessToken || !userData) {
-      navigate({ to: "/login" });
-    }
-
-    return () => {};
-  }, [navigate, userData]);
-
   const userInitials = `${userData?.firstName.charAt(0)}${userData?.lastName.charAt(0)}`;
+
+  // Active dashboard nav link
+  const currentLink = location.pathname;
 
   return (
     <main className="sm:flex min-h-screen">
@@ -47,7 +41,7 @@ export const DashboardLayout = (props: Props) => {
             <li>
               <a
                 href="/dashboard"
-                className="flex items-center p-2 text-base font-normal text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group"
+                className={`flex items-center p-2 text-base font-normal text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group ${currentLink === "/dashboard" ? "active-link" : ""}`}
               >
                 <span className="">Overview</span>
               </a>
@@ -57,21 +51,23 @@ export const DashboardLayout = (props: Props) => {
             <li>
               <a
                 href="/dashboard/task"
-                className="flex items-center p-2 text-base font-normal text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group"
+                className={`flex items-center p-2 text-base font-normal text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group ${currentLink === "/dashboard/task" ? "active-link" : ""}`}
               >
                 <span className="">Task</span>
               </a>
             </li>
 
             {/* Team */}
-            <li>
-              <a
-                href="/dashboard/team"
-                className="flex items-center p-2 text-base font-normal text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group"
-              >
-                <span className="">Team</span>
-              </a>
-            </li>
+            {userData.role === "admin" && (
+              <li>
+                <a
+                  href="/dashboard/team"
+                  className={`flex items-center p-2 text-base font-normal text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group ${currentLink === "/dashboard/team" ? "active-link" : ""}`}
+                >
+                  <span className="">Team</span>
+                </a>
+              </li>
+            )}
           </ul>
         </div>
       </aside>

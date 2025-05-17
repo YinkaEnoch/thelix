@@ -13,8 +13,10 @@
 import { Route as rootRoute } from './routes/__root'
 import { Route as SignupImport } from './routes/signup'
 import { Route as LoginImport } from './routes/login'
-import { Route as DashboardImport } from './routes/dashboard'
 import { Route as IndexImport } from './routes/index'
+import { Route as DashboardIndexImport } from './routes/dashboard/index'
+import { Route as DashboardTeamImport } from './routes/dashboard/team'
+import { Route as DashboardTaskImport } from './routes/dashboard/task'
 
 // Create/Update Routes
 
@@ -30,15 +32,27 @@ const LoginRoute = LoginImport.update({
   getParentRoute: () => rootRoute,
 } as any)
 
-const DashboardRoute = DashboardImport.update({
-  id: '/dashboard',
-  path: '/dashboard',
-  getParentRoute: () => rootRoute,
-} as any)
-
 const IndexRoute = IndexImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const DashboardIndexRoute = DashboardIndexImport.update({
+  id: '/dashboard/',
+  path: '/dashboard/',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const DashboardTeamRoute = DashboardTeamImport.update({
+  id: '/dashboard/team',
+  path: '/dashboard/team',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const DashboardTaskRoute = DashboardTaskImport.update({
+  id: '/dashboard/task',
+  path: '/dashboard/task',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -51,13 +65,6 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexImport
-      parentRoute: typeof rootRoute
-    }
-    '/dashboard': {
-      id: '/dashboard'
-      path: '/dashboard'
-      fullPath: '/dashboard'
-      preLoaderRoute: typeof DashboardImport
       parentRoute: typeof rootRoute
     }
     '/login': {
@@ -74,6 +81,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SignupImport
       parentRoute: typeof rootRoute
     }
+    '/dashboard/task': {
+      id: '/dashboard/task'
+      path: '/dashboard/task'
+      fullPath: '/dashboard/task'
+      preLoaderRoute: typeof DashboardTaskImport
+      parentRoute: typeof rootRoute
+    }
+    '/dashboard/team': {
+      id: '/dashboard/team'
+      path: '/dashboard/team'
+      fullPath: '/dashboard/team'
+      preLoaderRoute: typeof DashboardTeamImport
+      parentRoute: typeof rootRoute
+    }
+    '/dashboard/': {
+      id: '/dashboard/'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof DashboardIndexImport
+      parentRoute: typeof rootRoute
+    }
   }
 }
 
@@ -81,47 +109,76 @@ declare module '@tanstack/react-router' {
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
+  '/dashboard/task': typeof DashboardTaskRoute
+  '/dashboard/team': typeof DashboardTeamRoute
+  '/dashboard': typeof DashboardIndexRoute
 }
 
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
+  '/dashboard/task': typeof DashboardTaskRoute
+  '/dashboard/team': typeof DashboardTeamRoute
+  '/dashboard': typeof DashboardIndexRoute
 }
 
 export interface FileRoutesById {
   __root__: typeof rootRoute
   '/': typeof IndexRoute
-  '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
+  '/dashboard/task': typeof DashboardTaskRoute
+  '/dashboard/team': typeof DashboardTeamRoute
+  '/dashboard/': typeof DashboardIndexRoute
 }
 
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/dashboard' | '/login' | '/signup'
+  fullPaths:
+    | '/'
+    | '/login'
+    | '/signup'
+    | '/dashboard/task'
+    | '/dashboard/team'
+    | '/dashboard'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/dashboard' | '/login' | '/signup'
-  id: '__root__' | '/' | '/dashboard' | '/login' | '/signup'
+  to:
+    | '/'
+    | '/login'
+    | '/signup'
+    | '/dashboard/task'
+    | '/dashboard/team'
+    | '/dashboard'
+  id:
+    | '__root__'
+    | '/'
+    | '/login'
+    | '/signup'
+    | '/dashboard/task'
+    | '/dashboard/team'
+    | '/dashboard/'
   fileRoutesById: FileRoutesById
 }
 
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  DashboardRoute: typeof DashboardRoute
   LoginRoute: typeof LoginRoute
   SignupRoute: typeof SignupRoute
+  DashboardTaskRoute: typeof DashboardTaskRoute
+  DashboardTeamRoute: typeof DashboardTeamRoute
+  DashboardIndexRoute: typeof DashboardIndexRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  DashboardRoute: DashboardRoute,
   LoginRoute: LoginRoute,
   SignupRoute: SignupRoute,
+  DashboardTaskRoute: DashboardTaskRoute,
+  DashboardTeamRoute: DashboardTeamRoute,
+  DashboardIndexRoute: DashboardIndexRoute,
 }
 
 export const routeTree = rootRoute
@@ -135,22 +192,30 @@ export const routeTree = rootRoute
       "filePath": "__root.tsx",
       "children": [
         "/",
-        "/dashboard",
         "/login",
-        "/signup"
+        "/signup",
+        "/dashboard/task",
+        "/dashboard/team",
+        "/dashboard/"
       ]
     },
     "/": {
       "filePath": "index.tsx"
-    },
-    "/dashboard": {
-      "filePath": "dashboard.tsx"
     },
     "/login": {
       "filePath": "login.tsx"
     },
     "/signup": {
       "filePath": "signup.tsx"
+    },
+    "/dashboard/task": {
+      "filePath": "dashboard/task.tsx"
+    },
+    "/dashboard/team": {
+      "filePath": "dashboard/team.tsx"
+    },
+    "/dashboard/": {
+      "filePath": "dashboard/index.tsx"
     }
   }
 }

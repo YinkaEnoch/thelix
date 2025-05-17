@@ -1,3 +1,14 @@
 @import "tailwindcss";
 
 @custom-variant dark (&:where(.dark, .dark *));
+
+html,
+body {
+  overflow-x: hidden;
+}
+
+.active-link {
+  border-left: 1px solid var(--color-sky-600);
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}

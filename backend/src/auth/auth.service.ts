@@ -86,5 +86,15 @@ export class AuthService {
     return { message: 'User registered successfully' };
   }
 
-  logout() {}
+  async getAllTeamMember(
+    organizationId: string,
+  ): Promise<Record<string, any>[]> {
+    const organization = await this.usersRepository.findBy({ organizationId });
+
+    return organization.map((item) => {
+      const { id, password, ...others } = item;
+
+      return others;
+    });
+  }
 }

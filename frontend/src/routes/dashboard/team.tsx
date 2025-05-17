@@ -112,7 +112,6 @@ function RouteComponent() {
 
   const team = teamQuery.data;
 
-  // Handler for input fields onChange event:  ReactEventHandler<HTMLSelectElement>'
   const handleInputChange = (
     ev: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
   ) => {
@@ -147,7 +146,7 @@ function RouteComponent() {
               })
             }
           >
-            Add New Member
+            + New
           </button>
         </section>
 

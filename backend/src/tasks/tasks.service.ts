@@ -27,8 +27,22 @@ export class TasksService {
 
   async findAll(organizationId: string) {
     try {
-      return await this.taskRepository.findBy({ organizationId });
+      console.log({ organizationId });
+
+      return await this.taskRepository.query(
+        `SELECT t.taskId, t.task, t.assignee,
+          t.organizationId, t.priority, t.status,
+          t.dueDate, u.firstName, u.lastName,
+          u.emailAddress, u.role
+          FROM task t
+          LEFT JOIN user u
+          ON t.assignee = u.userId
+          WHERE t.organizationId = ?
+        `,
+        [organizationId],
+      );
     } catch (error) {
+      console.log({ error });
       throw new BadRequestException(error ?? `Failed to get tasks`);
     }
   }
@@ -48,11 +62,13 @@ export class TasksService {
   async update(taskId: string, updateTaskDto: UpdateTaskDto) {
     try {
       const task = await this.taskRepository.findOneBy({ taskId });
+      console.log({ task, taskId, updateTaskDto });
 
       if (!task) throw new NotFoundException(`Task (${taskId}) not found`);
 
       return await this.taskRepository.update({ taskId }, updateTaskDto);
     } catch (error) {
+      console.log(error);
       throw new BadRequestException(error ?? 'Failed to update task');
     }
   }

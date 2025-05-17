@@ -1,20 +1,8 @@
-import {
-  IsString,
-  IsEmail,
-  IsOptional,
-  IsUUID,
-  Length,
-  IsEnum,
-} from 'class-validator';
+import { IsString, IsEmail, IsUUID, Length, IsEnum } from 'class-validator';
 import { Transform } from 'class-transformer';
+import { UserRole } from 'src/enums/user-role.enum';
 
-// Define an enum for user roles (example)
-export enum UserRole {
-  ADMIN = 'admin',
-  USER = 'user',
-}
-
-export class UserDto {
+export class AddMemberDto {
   @IsString()
   @Length(2, 50)
   firstName: string;
@@ -31,8 +19,8 @@ export class UserDto {
   password: string;
 
   @IsString()
-  @Transform(({ value }) => value.trim().toLowerCase())
-  organization: string;
+  @IsUUID()
+  organizationId: string;
 
   @IsEnum(UserRole)
   role: string;

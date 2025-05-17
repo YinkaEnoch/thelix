@@ -1,34 +1,28 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
-import { ConfigModule, ConfigService } from '@nestjs/config';
-import { MongooseModule } from '@nestjs/mongoose';
-// import { AppConfig } from './config';
-import { User, UserSchema } from './schemas/User.schema';
-import { JwtModule } from '@nestjs/jwt';
-import { AppConfig } from './config';
+import { ConfigModule } from '@nestjs/config';
 import { TasksModule } from './tasks/tasks.module';
+import { AuthModule } from './auth/auth.module';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { User } from './auth/entities/user.entity';
+import { jwtModule } from './modules.config';
+import { Task } from './tasks/entities/task.entity';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
-    MongooseModule.forRootAsync({
-      imports: [ConfigModule],
-      useFactory: (configService: ConfigService) => ({
-        uri: configService.get<string>('DATABASE_URI'),
-      }),
-      inject: [ConfigService],
-    }),
-    MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
-    JwtModule.register({
-      global: true,
-      secret: 'new AppConfig().DATABASE_URI',
-      signOptions: { expiresIn: '1d' },
+    jwtModule,
+    TypeOrmModule.forRoot({
+      type: 'sqlite',
+      database: './.tmp/db',
+      synchronize: true,
+      logging: true,
+      entities: [User, Task],
     }),
     TasksModule,
+    AuthModule,
   ],
-  controllers: [AppController],
-  providers: [AppService],
+  controllers: [],
+  providers: [],
   exports: [ConfigModule],
 })
 export class AppModule {}

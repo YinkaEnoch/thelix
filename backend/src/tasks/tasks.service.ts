@@ -1,26 +1,71 @@
-import { Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Task } from './entities/task.entity';
 
 @Injectable()
 export class TasksService {
-  create(createTaskDto: CreateTaskDto) {
-    return 'This action adds a new task';
+  constructor(
+    @InjectRepository(Task)
+    private taskRepository: Repository<Task>,
+  ) {}
+
+  async create(createTaskDto: CreateTaskDto) {
+    try {
+      return await this.taskRepository.save(createTaskDto);
+    } catch (error) {
+      console.log(error);
+      throw new BadRequestException(error ?? 'Failed to create task');
+    }
   }
 
-  findAll() {
-    return `This action returns all tasks`;
+  async findAll(organizationId: string) {
+    try {
+      return await this.taskRepository.findBy({ organizationId });
+    } catch (error) {
+      throw new BadRequestException(error ?? `Failed to get tasks`);
+    }
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} task`;
+  async findOne(taskId: string) {
+    try {
+      const task = await this.taskRepository.findOneBy({ taskId });
+
+      if (!task) throw new NotFoundException(`Task (${taskId}) not found`);
+
+      return task;
+    } catch (error) {
+      throw new BadRequestException(error ?? `Failed to get task (${taskId})`);
+    }
   }
 
-  update(id: number, updateTaskDto: UpdateTaskDto) {
-    return `This action updates a #${id} task`;
+  async update(taskId: string, updateTaskDto: UpdateTaskDto) {
+    try {
+      const task = await this.taskRepository.findOneBy({ taskId });
+
+      if (!task) throw new NotFoundException(`Task (${taskId}) not found`);
+
+      return await this.taskRepository.update({ taskId }, updateTaskDto);
+    } catch (error) {
+      throw new BadRequestException(error ?? 'Failed to update task');
+    }
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} task`;
+  async remove(taskId: string) {
+    try {
+      const task = await this.taskRepository.findOneBy({ taskId });
+
+      if (!task) throw new NotFoundException(`Task (${taskId}) not found`);
+
+      return await this.taskRepository.delete({ taskId });
+    } catch (error) {
+      throw new BadRequestException(error ?? 'Failed to delete task');
+    }
   }
 }

@@ -8,31 +8,32 @@ import {
 } from 'typeorm';
 
 @Entity()
-export class Task {
+export class User {
   @PrimaryGeneratedColumn()
   id: number;
 
   @Column()
   @Generated('uuid')
-  taskId: string;
+  userId: string;
 
   @Column()
-  task: string;
-
-  @Column({ nullable: true })
-  assignee: string;
+  firstName: string;
 
   @Column()
+  lastName: string;
+
+  @Column({ unique: true })
+  emailAddress: string;
+
+  @Column()
+  password: string;
+
+  @Column()
+  @Generated('uuid')
   organizationId: string;
 
   @Column()
-  priority: string;
-
-  @Column()
-  status: string;
-
-  @Column()
-  dueDate: string;
+  role: string;
 
   @CreateDateColumn()
   createdAt: Date;

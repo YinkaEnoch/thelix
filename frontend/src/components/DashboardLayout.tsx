@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState, type PropsWithChildren } from "react";
-import { getAccessToken } from "../utils/token.util";
+import { clearAccessToken, getAccessToken } from "../utils/token.util";
 import { getUserData } from "../utils/userData.util";
 
 type Props = PropsWithChildren & {
@@ -108,13 +108,17 @@ export const DashboardLayout = (props: Props) => {
           </button>
           <h2 className="text-2xl p-2 mt-2">{props.title}</h2>
 
-          {/* Logout link */}
-          <Link
-            to="/login"
-            className="block p-2 mt-2 ml-auto underline text-sky-500"
+          {/* Logout */}
+          <button
+            type="button"
+            className="block p-2 mt-2 ml-auto underline text-sky-500 cursor-pointer"
+            onClick={() => {
+              clearAccessToken();
+              navigate({ to: "/login" });
+            }}
           >
             Logout
-          </Link>
+          </button>
         </header>
 
         <div className="p-2 mt-4">{props.children}</div>

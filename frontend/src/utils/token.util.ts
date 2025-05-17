@@ -5,3 +5,7 @@ export const getAccessToken = () => {
 export const saveAccessToken = (accessToken: string) => {
   sessionStorage.setItem("APP_ACCESS_TOKEN", accessToken);
 };
+
+export const clearAccessToken = () => {
+  sessionStorage.setItem("APP_ACCESS_TOKEN", "");
+};

@@ -59,12 +59,17 @@ function RouteComponent() {
 
   const tasks = tasksQuery.data;
   const totalTasks = tasks.length;
+
   const assignedtasks = tasks.filter(
     (item: Record<string, any>) => item.assignee !== "",
   ).length;
 
   const completedTasks = tasks.filter(
     (item: Record<string, any>) => item.status === TaskStatus.DONE,
+  ).length;
+
+  const overdueTasks = tasks.filter(
+    (item: Record<string, any>) => Date.now() > Date.parse(item.dueDate),
   ).length;
 
   console.log(tasksQuery);
@@ -78,7 +83,7 @@ function RouteComponent() {
           <SmallCard title="Total Tasks" content={totalTasks} />
           <SmallCard title="Assigned Tasks" content={assignedtasks} />
           <SmallCard title="Completed Tasks" content={completedTasks} />
-          <SmallCard title="Overdue Tasks" content={assignedtasks} />
+          <SmallCard title="Overdue Tasks" content={overdueTasks} />
         </section>
 
         {/* Team */}

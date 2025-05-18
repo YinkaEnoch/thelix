@@ -1,17 +1,13 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { DashboardLayout } from "../../components/DashboardLayout";
 import axios from "axios";
-import {
-  useMutation,
-  useQueries,
-  useQuery,
-  useQueryClient,
-} from "@tanstack/react-query";
+import { useMutation, useQueries, useQueryClient } from "@tanstack/react-query";
 import { getUserData } from "../../utils/userData.util";
 import { TaskPriority, TaskStatus } from "../../utils/tasks.enum";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { getAccessToken } from "../../utils/token.util";
+import { sortTasksUtil } from "../../utils/sortTasks.util";
 
 export const Route = createFileRoute("/dashboard/task")({
   component: RouteComponent,
@@ -97,6 +93,8 @@ function RouteComponent() {
     modalType: "",
     data: {},
   });
+
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
 
   // Filter form data
   // HACK!!!
@@ -206,14 +204,6 @@ function RouteComponent() {
   const team = teamQuery.data;
 
   // === TASKS ===
-  // const sortedTasks = (
-  //   data,
-  //   {
-  //     sortProperty,
-  //     sortDirection,
-  //   }: { sortProperty: string; sortDirection: "asc" | "desc" },
-  // ) => {
-  // };
   const tasks = tasksQuery.data;
 
   const handleInputChange = (
@@ -290,6 +280,22 @@ function RouteComponent() {
     ev.preventDefault();
 
     deleteTask.mutate(viewModal.data?.taskId);
+  };
+
+  // Handler for table sorting
+  const handleSorting = (
+    data: Record<string, any>[],
+    columnName: string,
+    sortDirection: "asc" | "desc",
+  ) => {
+    const sortedTasks = sortTasksUtil(data, columnName, sortDirection);
+
+    setSortDirection(sortedTasks?.direction as string);
+
+    queryClient.setQueryData(
+      ["tasks"],
+      sortedTasks?.data as Record<string, any>[],
+    );
   };
 
   return (
@@ -408,11 +414,32 @@ function RouteComponent() {
                       .filter((item) => item !== "lastName")
                       .filter((item) => item !== "emailAddress")
                       .filter((item) => item !== "role")
-                      .map(formatTitle)
                       .map((item, index) => {
                         return (
-                          <th scope="col" className="px-2 py-3" key={index}>
-                            {item}
+                          <th
+                            scope="col"
+                            className="px-2 py-3 cursor-pointer"
+                            key={index}
+                            onClick={() =>
+                              handleSorting(tasks, item, sortDirection)
+                            }
+                          >
+                            <span>{formatTitle(item)} </span>
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="14"
+                              height="14"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              className="inline"
+                            >
+                              <path d="m7 15 5 5 5-5" />
+                              <path d="m7 9 5-5 5 5" />
+                            </svg>
                           </th>
                         );
                       })}

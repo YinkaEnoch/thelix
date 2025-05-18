@@ -22,8 +22,21 @@ export class TasksController {
   }
 
   @Get()
-  findAll(@Query('organizationId') organizationId: string) {
-    return this.tasksService.findAll(organizationId);
+  findAll(
+    @Query('organizationId') organizationId: string,
+    @Query('status') status: string,
+    @Query('priority') priority: string,
+    @Query('assignee') assignee: string,
+    @Query('dueDate') dueDate: string,
+  ) {
+    const queryObj: Record<string, any> = {
+      status,
+      priority,
+      assignee,
+      dueDate,
+    };
+
+    return this.tasksService.findAll(organizationId, queryObj);
   }
 
   @Get(':taskId')

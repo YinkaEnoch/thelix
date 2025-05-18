@@ -22,9 +22,21 @@ const getTeamData = async (organizationId: string) => {
   return response.data;
 };
 
-const getTasks = async (organizationId: string) => {
+const getTasks = async ({
+  organizationId,
+  filterStatus,
+  filterPriority,
+  filterAssignee,
+  filterDueDate,
+}: {
+  organizationId: string;
+  filterStatus: string;
+  filterPriority: string;
+  filterAssignee: string;
+  filterDueDate: string;
+}) => {
   const response = await axios.get(
-    `/api/v1/tasks?organizationId=${organizationId}`,
+    `/api/v1/tasks?organizationId=${organizationId}&status=${filterStatus}&priority=${filterPriority}&assignee=${filterAssignee}&dueDate=${filterDueDate}`,
   );
 
   return response.data;
@@ -85,6 +97,17 @@ function RouteComponent() {
     modalType: "",
     data: {},
   });
+
+  // Filter form data
+  // HACK!!!
+  const filterForm = useState({
+    filterStatus: "",
+    filterPriority: "",
+    filterAssignee: "",
+    filterDueDate: "",
+  });
+  let [filterFormData] = filterForm;
+  const [, setFilterFormData] = filterForm;
 
   // Create New Task
   const [formData, setFormData] = useState({
@@ -161,7 +184,14 @@ function RouteComponent() {
         queryKey: ["team"],
         queryFn: () => getTeamData(userData.organizationId),
       },
-      { queryKey: ["tasks"], queryFn: () => getTasks(userData.organizationId) },
+      {
+        queryKey: ["tasks"],
+        queryFn: () =>
+          getTasks({
+            organizationId: userData.organizationId,
+            ...filterFormData,
+          }),
+      },
     ],
   });
 
@@ -176,6 +206,14 @@ function RouteComponent() {
   const team = teamQuery.data;
 
   // === TASKS ===
+  // const sortedTasks = (
+  //   data,
+  //   {
+  //     sortProperty,
+  //     sortDirection,
+  //   }: { sortProperty: string; sortDirection: "asc" | "desc" },
+  // ) => {
+  // };
   const tasks = tasksQuery.data;
 
   const handleInputChange = (
@@ -206,6 +244,31 @@ function RouteComponent() {
       ...values,
       data: { ...values.data, [key]: value },
     }));
+  };
+
+  // Handler for update filter form data
+  const handleFilterFormDataInput = (
+    ev: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+  ) => {
+    deleteTask.reset();
+    addNewTask.reset();
+    updateTask.reset();
+
+    const key = ev.target.id;
+    const value = ev.target.value;
+
+    // Make change
+    // HACK!!!
+    setFilterFormData((prev) => {
+      const newData = { ...prev, [key]: value };
+
+      filterFormData = newData;
+
+      // Fetch data: Invalidate query to refetch
+      queryClient.invalidateQueries({ queryKey: ["tasks"] });
+
+      return newData;
+    });
   };
 
   // Handler for form onSubmit event
@@ -243,160 +306,251 @@ function RouteComponent() {
           </button>
         </section>
 
-        {/* Task Table */}
-        <section className="mt-6">
-          <div className="relative bg-blue-60 overflow-x-auto">
-            <table className="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
-              <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
-                <tr>
-                  <th scope="col" className="px-2 py-3">
-                    S/N
-                  </th>
-                  {Object.keys(tasks[0])
-                    .filter((item) => item !== "taskId")
-                    .filter((item) => item !== "organizationId")
-                    .filter((item) => item !== "firstName")
-                    .filter((item) => item !== "lastName")
-                    .filter((item) => item !== "emailAddress")
-                    .filter((item) => item !== "role")
-                    .map(formatTitle)
-                    .map((item, index) => {
-                      return (
-                        <th scope="col" className="px-2 py-3" key={index}>
-                          {item}
-                        </th>
-                      );
-                    })}
+        {/* Filter Panel */}
+        <section className="mt-6 mb-4 flex flex-wrap gap-4">
+          <select
+            name="filterStatus"
+            id="filterStatus"
+            value={filterFormData.filterStatus}
+            onChange={handleFilterFormDataInput}
+            className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white"
+          >
+            <option value="">All Status</option>
+            <option value="Done">Done</option>
+            <option value="In Progress">In Progress</option>
+            <option value="To Do">To Do</option>
+          </select>
 
-                  {/* Action Column */}
-                  <th scope="col" className="px-2 py-3">
-                    Action
-                  </th>
-                </tr>
-              </thead>
+          {/* Priority */}
+          <select
+            name="filterPriority"
+            id="filterPriority"
+            value={filterFormData.filterPriority}
+            onChange={handleFilterFormDataInput}
+            className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white"
+          >
+            <option value="">All Priority</option>
+            <option value="high">High</option>
+            <option value="medium">Medium</option>
+            <option value="low">Low</option>
+          </select>
 
-              <tbody>
-                {tasks.map((item, index: number) => {
-                  return (
-                    <tr
-                      className="odd:bg-white odd:dark:bg-gray-900 even:bg-gray-50 even:dark:bg-gray-800 border-b dark:border-gray-700 border-gray-200"
-                      key={index}
-                    >
-                      <td className="px-2 py-3">{index + 1}</td>
-                      <td className="px-2 py-3 capitalize">{item.task}</td>
-                      <td className="px-2 py-3 capitalize">{item.firstName}</td>
-                      <td
-                        className={`px-2 py-3 capitalize ${item.priority === "high" ? "text-red-500" : ""} ${item.priority === "medium" ? "text-sky-500" : ""}`}
-                      >
-                        {item.priority}
-                      </td>
-                      <td
-                        className={`px-2 py-3 capitalize ${item.status === TaskStatus.DONE ? "text-green-500" : ""} ${item.status === TaskStatus.IN_PROGRESS ? "text-sky-500" : ""}`}
-                      >
-                        {item.status}
-                      </td>
+          {/* Assignee */}
+          <select
+            name="filterAssignee"
+            id="filterAssignee"
+            value={filterFormData.filterAssignee}
+            onChange={handleFilterFormDataInput}
+            className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white"
+          >
+            <option value="">All Assignee</option>
+            {team.map((item) => {
+              return (
+                <option value={item.userId} key={item.userId}>
+                  {item.firstName}
+                </option>
+              );
+            })}
+          </select>
 
-                      <td className="px-2 py-3 capitalize">{item.dueDate}</td>
+          {/* Due Date */}
+          <input
+            type="date"
+            name="filterDueDate"
+            id="filterDueDate"
+            className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white"
+            value={filterFormData.filterDueDate}
+            onChange={handleFilterFormDataInput}
+          />
 
-                      {/* Action */}
-                      <td className="px-2 py-3">
-                        {/* Edit */}
-                        <button
-                          type="button"
-                          className="cursor-pointer  px-2"
-                          onClick={() =>
-                            setViewModal({
-                              show: true,
-                              modalType: "edit",
-                              data: item,
-                            })
-                          }
-                        >
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="24"
-                            height="24"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            className="w-5"
-                          >
-                            <path d="M12 20h9" />
-                            <path d="M16.376 3.622a1 1 0 0 1 3.002 3.002L7.368 18.635a2 2 0 0 1-.855.506l-2.872.838a.5.5 0 0 1-.62-.62l.838-2.872a2 2 0 0 1 .506-.854z" />
-                          </svg>
-                        </button>
+          {/* Reset */}
+          <button
+            type="button"
+            className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-sky-500 focus:border-sky-500 p-2.5 px-4 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white cursor-pointer"
+            onClick={() => {
+              setFilterFormData(() => {
+                const newData = {
+                  filterStatus: "",
+                  filterPriority: "",
+                  filterAssignee: "",
+                  filterDueDate: "",
+                };
 
-                        {/* View */}
-                        <button
-                          type="button"
-                          className="cursor-pointer  px-2"
-                          onClick={() =>
-                            setViewModal({
-                              show: true,
-                              modalType: "view",
-                              data: item,
-                            })
-                          }
-                        >
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="24"
-                            height="24"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            className="w-5"
-                          >
-                            <path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0" />
-                            <circle cx="12" cy="12" r="3" />
-                          </svg>
-                        </button>
+                filterFormData = newData;
 
-                        {/* Delete */}
-                        <button
-                          type="button"
-                          className="cursor-pointer px-2"
-                          onClick={() =>
-                            setViewModal({
-                              show: true,
-                              modalType: "delete",
-                              data: item,
-                            })
-                          }
-                        >
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="24"
-                            height="24"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            className="w-5"
-                          >
-                            <path d="M3 6h18" />
-                            <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-                            <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-                            <line x1="10" x2="10" y1="11" y2="17" />
-                            <line x1="14" x2="14" y1="11" y2="17" />
-                          </svg>
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+                // Fetch data: Invalidate query to refetch
+                queryClient.invalidateQueries({ queryKey: ["tasks"] });
+
+                return newData;
+              });
+            }}
+          >
+            Reset
+          </button>
         </section>
+
+        {tasks.length < 1 && <p>You currently have no tasks!</p>}
+
+        {/* Task Table */}
+        {tasks.length > 0 && (
+          <section className="mt-6">
+            <div className="relative bg-blue-60 overflow-x-auto">
+              <table className="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
+                <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                  <tr>
+                    <th scope="col" className="px-2 py-3">
+                      S/N
+                    </th>
+                    {Object.keys(tasks[0])
+                      .filter((item) => item !== "taskId")
+                      .filter((item) => item !== "organizationId")
+                      .filter((item) => item !== "firstName")
+                      .filter((item) => item !== "lastName")
+                      .filter((item) => item !== "emailAddress")
+                      .filter((item) => item !== "role")
+                      .map(formatTitle)
+                      .map((item, index) => {
+                        return (
+                          <th scope="col" className="px-2 py-3" key={index}>
+                            {item}
+                          </th>
+                        );
+                      })}
+
+                    {/* Action Column */}
+                    <th scope="col" className="px-2 py-3">
+                      Action
+                    </th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  {tasks.map((item, index: number) => {
+                    return (
+                      <tr
+                        className="odd:bg-white odd:dark:bg-gray-900 even:bg-gray-50 even:dark:bg-gray-800 border-b dark:border-gray-700 border-gray-200"
+                        key={index}
+                      >
+                        <td className="px-2 py-3">{index + 1}</td>
+                        <td className="px-2 py-3 capitalize">{item.task}</td>
+                        <td className="px-2 py-3 capitalize">
+                          {item.firstName}
+                        </td>
+                        <td
+                          className={`px-2 py-3 capitalize ${item.priority === "high" ? "text-red-500" : ""} ${item.priority === "medium" ? "text-sky-500" : ""}`}
+                        >
+                          {item.priority}
+                        </td>
+                        <td
+                          className={`px-2 py-3 capitalize ${item.status === TaskStatus.DONE ? "text-green-500" : ""} ${item.status === TaskStatus.IN_PROGRESS ? "text-sky-500" : ""}`}
+                        >
+                          {item.status}
+                        </td>
+
+                        <td className="px-2 py-3 capitalize">{item.dueDate}</td>
+
+                        {/* Action */}
+                        <td className="px-2 py-3">
+                          {/* Edit */}
+                          <button
+                            type="button"
+                            className="cursor-pointer  px-2"
+                            onClick={() =>
+                              setViewModal({
+                                show: true,
+                                modalType: "edit",
+                                data: item,
+                              })
+                            }
+                          >
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="24"
+                              height="24"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              className="w-5"
+                            >
+                              <path d="M12 20h9" />
+                              <path d="M16.376 3.622a1 1 0 0 1 3.002 3.002L7.368 18.635a2 2 0 0 1-.855.506l-2.872.838a.5.5 0 0 1-.62-.62l.838-2.872a2 2 0 0 1 .506-.854z" />
+                            </svg>
+                          </button>
+
+                          {/* View */}
+                          <button
+                            type="button"
+                            className="cursor-pointer  px-2"
+                            onClick={() =>
+                              setViewModal({
+                                show: true,
+                                modalType: "view",
+                                data: item,
+                              })
+                            }
+                          >
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="24"
+                              height="24"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              className="w-5"
+                            >
+                              <path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0" />
+                              <circle cx="12" cy="12" r="3" />
+                            </svg>
+                          </button>
+
+                          {/* Delete */}
+                          {userData.role === "admin" && (
+                            <button
+                              type="button"
+                              className="cursor-pointer px-2"
+                              onClick={() =>
+                                setViewModal({
+                                  show: true,
+                                  modalType: "delete",
+                                  data: item,
+                                })
+                              }
+                            >
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="24"
+                                height="24"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                className="w-5"
+                              >
+                                <path d="M3 6h18" />
+                                <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+                                <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+                                <line x1="10" x2="10" y1="11" y2="17" />
+                                <line x1="14" x2="14" y1="11" y2="17" />
+                              </svg>
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        )}
 
         {/* Add New Task Modal */}
         {addNewTaskModal && (

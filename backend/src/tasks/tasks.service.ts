@@ -25,24 +25,46 @@ export class TasksService {
     }
   }
 
-  async findAll(organizationId: string) {
+  async findAll(organizationId: string, queryObj: Record<string, string>) {
     try {
-      console.log({ organizationId });
+      const statusQuery = 'AND t.status = ?';
+      const priorityQuery = 'AND t.priority = ?';
+      const assigneeQuery = 'AND t.assignee = ?';
+      const dueDateQuery = 'AND t.dueDate = ?';
 
-      return await this.taskRepository.query(
-        `SELECT t.taskId, t.task, t.assignee,
-          t.organizationId, t.priority, t.status,
-          t.dueDate, u.firstName, u.lastName,
-          u.emailAddress, u.role
-          FROM task t
-          LEFT JOIN user u
-          ON t.assignee = u.userId
-          WHERE t.organizationId = ?
-        `,
-        [organizationId],
-      );
+      const queryParameters = [organizationId];
+
+      let sqlQuery = `SELECT t.taskId, t.task, t.assignee,
+        t.organizationId, t.priority, t.status,
+        t.dueDate, u.firstName, u.lastName,
+        u.emailAddress, u.role
+        FROM task t
+        LEFT JOIN user u
+        ON t.assignee = u.userId
+        WHERE t.organizationId = ?`;
+
+      if (queryObj.status) {
+        sqlQuery += ' ' + statusQuery;
+        queryParameters.push(queryObj.status);
+      }
+
+      if (queryObj.priority) {
+        sqlQuery += ' ' + priorityQuery;
+        queryParameters.push(queryObj.priority);
+      }
+
+      if (queryObj.assignee) {
+        sqlQuery += ' ' + assigneeQuery;
+        queryParameters.push(queryObj.assignee);
+      }
+
+      if (queryObj.dueDate) {
+        sqlQuery += ' ' + dueDateQuery;
+        queryParameters.push(queryObj.dueDate);
+      }
+
+      return await this.taskRepository.query(sqlQuery, queryParameters);
     } catch (error) {
-      console.log({ error });
       throw new BadRequestException(error ?? `Failed to get tasks`);
     }
   }
@@ -62,7 +84,6 @@ export class TasksService {
   async update(taskId: string, updateTaskDto: UpdateTaskDto) {
     try {
       const task = await this.taskRepository.findOneBy({ taskId });
-      console.log({ task, taskId, updateTaskDto });
 
       if (!task) throw new NotFoundException(`Task (${taskId}) not found`);
 
